@@ -57,15 +57,16 @@ export const getLeaderboardData = async () => {
 };
 
 // Get recent discussions
-export const getRecentDiscussions = async (limit = 5) => {
+// Get recent discussions
+export const getRecentDiscussions = async (limitCount = 5) => {
   try {
     const discussionsRef = collection(db, DISCUSSIONS_COLLECTION);
-    const q = query(discussionsRef, orderBy('timestamp', 'desc'), limit(limit));
+    const q = query(discussionsRef, orderBy('timestamp', 'desc'), limit(limitCount));
     const querySnapshot = await getDocs(q);
-
-    return querySnapshot.docs.map((doc) => ({
+    
+    return querySnapshot.docs.map(doc => ({
       id: doc.id,
-      ...doc.data(),
+      ...doc.data()
     }));
   } catch (error) {
     console.error('Error getting recent discussions:', error);
