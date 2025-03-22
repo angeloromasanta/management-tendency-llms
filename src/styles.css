@@ -71,38 +71,22 @@ body {
 /* Spectrum visualization */
 .spectrum-container {
   position: relative;
-  height: 80px;
-  background: linear-gradient(
-    to right,
-    rgba(59, 130, 246, 0.1),
-    rgba(16, 185, 129, 0.1)
-  );
-  border-radius: 12px;
-  border: 1px solid #e5e7eb;
+  margin: 2rem 0;
+  padding: 0 1.5rem;
 }
 
-.spectrum-label-a {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #3b82f6;
-  font-weight: 600;
-}
-
-.spectrum-label-b {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #10b981;
-  font-weight: 600;
+.spectrum-bg {
+  height: 12px;
+  border-radius: 9999px;
 }
 
 .model-dot {
-  position: absolute;
-  transform: translate(-50%, -50%);
-  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.spectrum-label-a, .spectrum-label-b {
+  color: #4a5568;
+  white-space: nowrap;
 }
 
 /* Animation */

@@ -140,15 +140,12 @@ export const updateDiscussion = async (discussionId, updateData) => {
 };
 
 // Update leaderboard with discussion results
-export const updateLeaderboard = async (
-  dimensionId,
-  dimensionData,
-  modelResults
-) => {
+// Update leaderboard with discussion results
+export const updateLeaderboard = async (dimensionId, dimensionData, modelResults) => {
   try {
     const leaderboardRef = doc(db, LEADERBOARD_COLLECTION, 'leaderboard');
     const leaderboardSnap = await getDoc(leaderboardRef);
-
+    
     if (!leaderboardSnap.exists()) {
       // Initialize leaderboard if it doesn't exist
       const initialData = {
@@ -156,62 +153,71 @@ export const updateLeaderboard = async (
           [dimensionId]: {
             ...dimensionData,
             models: modelResults,
-            discussionCount: 1,
-          },
+            discussionCount: 1
+          }
         },
-        lastUpdated: new Date(),
+        lastUpdated: new Date()
       };
-
+      
       await setDoc(leaderboardRef, initialData);
       return true;
     }
-
+    
     // Update existing leaderboard
     const currentData = leaderboardSnap.data();
     const currentDimension = currentData.dimensions[dimensionId] || {
       ...dimensionData,
       models: {},
-      discussionCount: 0,
+      discussionCount: 0
     };
-
+    
     // Update model stats for this dimension
     const updatedModels = { ...currentDimension.models };
-
+    
     Object.entries(modelResults).forEach(([modelId, modelData]) => {
       const baseModelId = modelData.baseModelId;
-
-      // If we already have data for this exact model instance, average it
+      
+      // Calculate balance based on vote (0 for A, 100 for B, 50 for Neutral)
+      const currentVoteBalance = modelData.vote === 'A' ? 0 : modelData.vote === 'B' ? 100 : 50;
+      
       if (updatedModels[modelId]) {
-        // Average with previous balance
-        const prevBalance = updatedModels[modelId].balance;
-        const newBalance = (prevBalance + modelData.balance) / 2;
-
+        // If model already exists in this dimension, calculate the new average balance
+        // Get previous discussions count for this model
+        const previousCount = updatedModels[modelId].discussionCount || 1;
+        const previousBalance = updatedModels[modelId].balance || 50;
+        
+        // Calculate new average balance
+        const newBalance = ((previousBalance * previousCount) + currentVoteBalance) / (previousCount + 1);
+        
         updatedModels[modelId] = {
           ...updatedModels[modelId],
           balance: newBalance,
           recentVote: modelData.vote,
+          discussionCount: previousCount + 1
         };
       } else {
-        // Add new model data
+        // Add new model data with the balance from current vote
         updatedModels[modelId] = {
           ...modelData,
+          balance: currentVoteBalance,
+          discussionCount: 1
         };
       }
     });
-
+    
     // Update the dimension
     const updatedDimension = {
       ...dimensionData,
       models: updatedModels,
-      discussionCount: currentDimension.discussionCount + 1,
+      discussionCount: currentDimension.discussionCount + 1
     };
-
+    
     // Update the leaderboard
     await updateDoc(leaderboardRef, {
       [`dimensions.${dimensionId}`]: updatedDimension,
-      lastUpdated: new Date(),
+      lastUpdated: new Date()
     });
-
+    
     return true;
   } catch (error) {
     console.error('Error updating leaderboard:', error);
